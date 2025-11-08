@@ -31,13 +31,13 @@ jobs:
         run: |
           mkdir -p dist
           GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
-          go build -o dist/myapp-${{ matrix.os }}-${{ matrix.arch }}
+          go build -o dist/catv-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: myapp-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/myapp-${{ matrix.os }}-${{ matrix.arch }}
+          name: catv-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/catv-${{ matrix.os }}-${{ matrix.arch }}
 
   release:
     name: Create Versioned and Latest Release

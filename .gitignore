@@ -1,1 +1,5 @@
+# Ignore SQLite database used by the flashcards app
 flashcards.db
+
+# Ignore macOS Finder metadata files
+.DS_Store

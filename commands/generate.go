@@ -50,9 +50,9 @@ var GenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate flashcards from markdown files",
 	Run: func(cmd *cobra.Command, args []string) {
-		filePath, _ := cmd.Flags().GetString("file")
-		if filePath == "" {
-			tui.PrintError("Please provide a file or folder with --file", nil)
+		path, _ := cmd.Flags().GetString("path")
+		if path == "" {
+			tui.PrintError("Please provide a file or folder with --path", nil)
 			os.Exit(1)
 		}
 
@@ -61,7 +61,7 @@ var GenerateCmd = &cobra.Command{
 		tui.PrintInfo(fmt.Sprintf("Database: %s", Cfg.Database.Name))
 		tui.PrintInfo(fmt.Sprintf("API Target: %s", Cfg.Ollama.URL))
 
-		files, err := getMarkdownFiles(filePath)
+		files, err := getMarkdownFiles(path)
 		if err != nil {
 			tui.PrintError("File error:", err)
 			os.Exit(1)
@@ -163,7 +163,7 @@ Markdown:
 }
 
 func init() {
-	GenerateCmd.Flags().StringP("file", "f", "", "Markdown file or folder to process")
+	GenerateCmd.Flags().StringP("path", "p", "", "Markdown file or folder to process")
 }
 
 func getMarkdownFiles(path string) ([]string, error) {
