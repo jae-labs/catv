@@ -7,6 +7,7 @@ import (
 
 	"catv/internal/store"
 
+	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -28,6 +29,9 @@ type AdminModel struct {
 	selected   int
 	view       adminView
 
+	// table for list view
+	table table.Model
+
 	// form fields
 	questionInput textinput.Model
 	answerInput   textinput.Model
@@ -47,10 +51,45 @@ func NewAdminModel(storeRef *store.Store, flashcards []store.Flashcard) *AdminMo
 	a.Placeholder = "Answer"
 	r := textinput.New()
 	r.Placeholder = "Days (e.g. 7)"
+
+	// Setup table columns
+	columns := []table.Column{
+		{Title: "ID", Width: 6},
+		{Title: "Question", Width: 40},
+		{Title: "Answer", Width: 30},
+		{Title: "Revisit In", Width: 12},
+	}
+
+	// Convert flashcards to table rows
+	rows := makeTableRows(flashcards)
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(15),
+	)
+
+	// Style the table
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(true).
+		Foreground(lipgloss.Color("205"))
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color("229")).
+		Background(lipgloss.Color("57")).
+		Bold(false)
+
+	t.SetStyles(s)
+
 	return &AdminModel{
 		flashcards:    flashcards,
 		selected:      0,
 		view:          adminList,
+		table:         t,
 		questionInput: q,
 		answerInput:   a,
 		revisitInput:  r,
@@ -58,9 +97,24 @@ func NewAdminModel(storeRef *store.Store, flashcards []store.Flashcard) *AdminMo
 	}
 }
 
+// makeTableRows converts flashcards to table rows
+func makeTableRows(flashcards []store.Flashcard) []table.Row {
+	rows := make([]table.Row, len(flashcards))
+	for i, fc := range flashcards {
+		rows[i] = table.Row{
+			fmt.Sprintf("%d", fc.ID),
+			truncate(fc.Question, 40),
+			truncate(fc.Answer, 30),
+			fmt.Sprintf("%d days", fc.RevisitIn),
+		}
+	}
+	return rows
+}
+
 func (m *AdminModel) Init() tea.Cmd { return nil }
 
 func (m *AdminModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		key := msg.String()
@@ -69,32 +123,36 @@ func (m *AdminModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch key {
 			case "q":
 				return m, tea.Quit
-			case "j", "down":
-				if m.selected < len(m.flashcards)-1 {
-					m.selected++
-				}
-			case "k", "up":
-				if m.selected > 0 {
-					m.selected--
-				}
 			case "c":
 				m.view = adminCreate
 				m.resetForm()
+				return m, nil
 			case "e":
 				if len(m.flashcards) == 0 {
 					break
 				}
+				m.selected = m.table.Cursor()
 				m.loadSelectedIntoForm()
 				m.view = adminEdit
+				return m, nil
 			case "d":
 				if len(m.flashcards) == 0 {
 					break
 				}
+				m.selected = m.table.Cursor()
 				m.view = adminConfirmDelete
+				return m, nil
 			case "r":
 				m.reload()
+				return m, nil
 			case "?":
 				m.view = adminHelp
+				return m, nil
+			default:
+				// Let table handle navigation
+				m.table, cmd = m.table.Update(msg)
+				m.selected = m.table.Cursor()
+				return m, cmd
 			}
 		case adminCreate:
 			if key == "esc" {
@@ -109,7 +167,7 @@ func (m *AdminModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.createFlashcard()
 				return m, nil
 			}
-			m.updateInputs(key)
+			m.updateInputs(msg)
 		case adminEdit:
 			if key == "esc" {
 				m.view = adminList
@@ -123,7 +181,7 @@ func (m *AdminModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.updateFlashcard()
 				return m, nil
 			}
-			m.updateInputs(key)
+			m.updateInputs(msg)
 		case adminConfirmDelete:
 			if key == "y" {
 				m.deleteFlashcard()
@@ -142,40 +200,130 @@ func (m *AdminModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *AdminModel) View() string {
-	helpBar := lipgloss.NewStyle().Faint(true).Render("[j/k] navigate  [c] create  [e] edit  [d] delete  [r] reload  [?] help  [q] quit")
+	// Define color styles
+	helpStyle := lipgloss.NewStyle().Faint(true)
+	errorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true)
+	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("34"))
+	titleStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
+
+	// Edit mode styles with colors
+	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("86")).Bold(true)
+	inputFocusedStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("229")).
+		Background(lipgloss.Color("57")).
+		Padding(0, 1)
+	inputBlurredStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("240")).
+		Padding(0, 1)
+
+	helpBar := helpStyle.Render("[↑/↓] navigate  [c] create  [e] edit  [d] delete  [r] reload  [?] help  [q] quit")
 
 	if m.errMsg != "" {
-		helpBar += "\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render(m.errMsg)
+		helpBar += "\n" + errorStyle.Render("✗ "+m.errMsg)
 	} else if m.statusMsg != "" {
-		helpBar += "\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("34")).Render(m.statusMsg)
+		helpBar += "\n" + successStyle.Render("✓ "+m.statusMsg)
 	}
 
 	switch m.view {
 	case adminList:
 		var b strings.Builder
+
 		if len(m.flashcards) == 0 {
-			b.WriteString("No flashcards. Press c to create.\n")
+			b.WriteString("No flashcards. Press 'c' to create.\n")
 		} else {
-			for i, fc := range m.flashcards {
-				prefix := "  "
-				if i == m.selected {
-					prefix = "> "
-				}
-				nextDisp := fmt.Sprintf("%d", fc.RevisitIn)
-				line := fmt.Sprintf("%s[%d] %s | %s (revisitIn: %s)\n", prefix, fc.ID, truncate(fc.Question, 40), truncate(fc.Answer, 30), nextDisp)
-				b.WriteString(line)
-			}
+			b.WriteString(m.table.View() + "\n")
 		}
 		b.WriteString("\n" + helpBar)
 		return b.String()
+
 	case adminCreate:
-		return fmt.Sprintf("Create Flashcard\nQuestion: %s\nAnswer: %s\nRevisit (days): %s\n[enter] save  [esc] cancel\n\n%s", m.questionInput.View(), m.answerInput.View(), m.revisitInput.View(), helpBar)
+		qLabel := labelStyle.Render("Question:")
+		qInput := m.questionInput.View()
+		if m.questionInput.Focused() {
+			qInput = inputFocusedStyle.Render(qInput)
+		} else {
+			qInput = inputBlurredStyle.Render(qInput)
+		}
+
+		aLabel := labelStyle.Render("Answer:")
+		aInput := m.answerInput.View()
+		if m.answerInput.Focused() {
+			aInput = inputFocusedStyle.Render(aInput)
+		} else {
+			aInput = inputBlurredStyle.Render(aInput)
+		}
+
+		rLabel := labelStyle.Render("Revisit (days):")
+		rInput := m.revisitInput.View()
+		if m.revisitInput.Focused() {
+			rInput = inputFocusedStyle.Render(rInput)
+		} else {
+			rInput = inputBlurredStyle.Render(rInput)
+		}
+
+		helpText := helpStyle.Render("[tab] next field  [enter] save  [esc] cancel")
+
+		return fmt.Sprintf("%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n\n%s",
+			qLabel, qInput, aLabel, aInput, rLabel, rInput, helpText, helpBar)
+
 	case adminEdit:
-		return fmt.Sprintf("Edit Flashcard (ID %d)\nQuestion: %s\nAnswer: %s\nRevisit (days): %s\n[enter] update  [esc] cancel\n\n%s", m.flashcards[m.selected].ID, m.questionInput.View(), m.answerInput.View(), m.revisitInput.View(), helpBar)
+		title := titleStyle.Render(fmt.Sprintf("(ID %d)", m.flashcards[m.selected].ID))
+
+		qLabel := labelStyle.Render("Question:")
+		qInput := m.questionInput.View()
+		if m.questionInput.Focused() {
+			qInput = inputFocusedStyle.Render(qInput)
+		} else {
+			qInput = inputBlurredStyle.Render(qInput)
+		}
+
+		aLabel := labelStyle.Render("Answer:")
+		aInput := m.answerInput.View()
+		if m.answerInput.Focused() {
+			aInput = inputFocusedStyle.Render(aInput)
+		} else {
+			aInput = inputBlurredStyle.Render(aInput)
+		}
+
+		rLabel := labelStyle.Render("Revisit (days):")
+		rInput := m.revisitInput.View()
+		if m.revisitInput.Focused() {
+			rInput = inputFocusedStyle.Render(rInput)
+		} else {
+			rInput = inputBlurredStyle.Render(rInput)
+		}
+
+		helpText := helpStyle.Render("[tab] next field  [enter] update  [esc] cancel")
+
+		return fmt.Sprintf("%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n\n",
+			title, qLabel, qInput, aLabel, aInput, rLabel, rInput, helpText)
+
 	case adminConfirmDelete:
-		return fmt.Sprintf("Delete Flashcard ID %d? [y/n]\n\n%s", m.flashcards[m.selected].ID, helpBar)
+		title := titleStyle.Render("🗑️  Delete Confirmation")
+		warning := errorStyle.Render(fmt.Sprintf("Delete Flashcard ID %d?", m.flashcards[m.selected].ID))
+		options := helpStyle.Render("[y] yes  [n] no  [esc] cancel")
+		return fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s", title, warning, options, helpBar)
+
 	case adminHelp:
-		return fmt.Sprintf("Help\nUse j/k to move, c create, e edit, d delete, r reload.\nesc to return.\n\n%s", helpBar)
+		title := titleStyle.Render("❓ Help")
+		helpText := `Navigation:
+  ↑/k      Move up
+  ↓/j      Move down
+  
+Actions:
+  c        Create new flashcard
+  e        Edit selected flashcard
+  d        Delete selected flashcard
+  r        Reload flashcards
+  ?        Show this help
+  q        Quit
+  
+In edit/create mode:
+  tab      Next field
+  enter    Save changes
+  esc      Cancel`
+
+		return fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s", title, helpText, helpStyle.Render("[esc] back"), helpBar)
 	}
 	return ""
 }
@@ -209,17 +357,15 @@ func (m *AdminModel) loadSelectedIntoForm() {
 	m.revisitInput.Blur()
 }
 
-func (m *AdminModel) updateInputs(key string) {
-	// We only simulate typed runes for focused input
-	var cmds []tea.Cmd
+func (m *AdminModel) updateInputs(msg tea.Msg) {
+	// Update the focused input with the key message
 	if m.questionInput.Focused() {
-		m.questionInput, _ = m.questionInput.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(key)})
+		m.questionInput, _ = m.questionInput.Update(msg)
 	} else if m.answerInput.Focused() {
-		m.answerInput, _ = m.answerInput.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(key)})
+		m.answerInput, _ = m.answerInput.Update(msg)
 	} else if m.revisitInput.Focused() {
-		m.revisitInput, _ = m.revisitInput.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(key)})
+		m.revisitInput, _ = m.revisitInput.Update(msg)
 	}
-	_ = cmds
 }
 
 func (m *AdminModel) parseRevisitDays() (int, error) {
