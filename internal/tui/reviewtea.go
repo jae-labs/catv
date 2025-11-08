@@ -3,7 +3,10 @@ package tui
 import (
 	"catv/internal/store"
 	"fmt"
+	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/timer"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -18,6 +21,7 @@ const (
 	viewAnswer
 	viewRevisitIn
 	viewDone
+	viewTimeout
 )
 
 var (
@@ -35,24 +39,45 @@ type ReviewModel struct {
 	quitting   bool
 	correct    []bool
 	revisitIn  []int
+	width      int
+	height     int
+	spinner    spinner.Model
+	timer      timer.Model
 }
 
 func NewReviewModel(flashcards []store.Flashcard) *ReviewModel {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return &ReviewModel{
 		flashcards: flashcards,
 		current:    0,
 		view:       viewQuestion,
 		correct:    make([]bool, len(flashcards)),
 		revisitIn:  make([]int, len(flashcards)),
+		spinner:    s,
+		timer:      timer.NewWithInterval(30*time.Second, time.Second),
 	}
 }
 
 func (m *ReviewModel) Init() tea.Cmd {
-	return nil
+	return tea.Batch(m.timer.Init(), m.spinner.Tick)
 }
 
 func (m *ReviewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+	case timer.TimeoutMsg:
+		m.view = viewAnswer
+		return m, tea.Batch(cmds...)
+	case spinner.TickMsg:
+		m.spinner, cmd = m.spinner.Update(msg)
+		cmds = append(cmds, cmd)
 	case tea.KeyMsg:
 		if msg.String() == "q" {
 			m.quitting = true
@@ -100,7 +125,10 @@ func (m *ReviewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.QuitMsg:
 		m.quitting = true
 	}
-	return m, nil
+	m.timer, cmd = m.timer.Update(msg)
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m *ReviewModel) nextCard() {
@@ -111,6 +139,7 @@ func (m *ReviewModel) nextCard() {
 	}
 	m.view = viewQuestion
 	m.resultMsg = ""
+	m.timer = timer.NewWithInterval(30*time.Second, time.Second)
 }
 
 // Results API for review command
@@ -138,9 +167,11 @@ func (m *ReviewModel) View() string {
 	if m.view == viewDone {
 		current = total
 	}
-	width := 60
-	height := 10
-	frame := lipgloss.NewStyle().Width(width).Height(height).Align(lipgloss.Center, lipgloss.Center).Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("63"))
+	width := m.width
+	if width > 80 {
+		width = 80
+	}
+	frame := lipgloss.NewStyle().Width(width).Align(lipgloss.Center, lipgloss.Center).Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("63"))
 
 	// Count correct and incorrect answers
 	correctCount := 0
@@ -166,7 +197,7 @@ func (m *ReviewModel) View() string {
 	var content string
 	switch m.view {
 	case viewQuestion:
-		content = fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s", questionStyle.Render("Question:"), m.flashcards[m.current].Question, infoStyle.Render("Press Enter to reveal answer..."), bottomBar)
+		content = fmt.Sprintf("%s\n\n%s\n\n%s %s\n\n%s", questionStyle.Render("Question:"), m.flashcards[m.current].Question, m.spinner.View(), m.timer.View(), bottomBar)
 	case viewAnswer:
 		content = fmt.Sprintf("%s\n\n%s\n\n%s\n%s", answerStyle.Render("Answer:"), m.flashcards[m.current].Answer, infoStyle.Render("Was your answer correct? [c]orrect / [i]ncorrect\n"), bottomBar)
 	case viewRevisitIn:
@@ -174,5 +205,5 @@ func (m *ReviewModel) View() string {
 	case viewDone:
 		content = fmt.Sprintf("%s\n%s", successStyle.Render("Review complete 🎉🎉🎉\n"), bottomBar)
 	}
-	return frame.Render(content) + "\n" + exitMsg
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, frame.Render(content)+"\n"+exitMsg)
 }

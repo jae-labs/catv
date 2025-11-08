@@ -7,6 +7,8 @@ import (
 
 	"catv/internal/store"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -22,7 +24,6 @@ const (
 	adminEdit
 	adminConfirmDelete
 	adminConfirmBulkReset
-	adminHelp
 )
 
 // Key constants
@@ -32,10 +33,55 @@ const (
 	keyTab   = "tab"
 )
 
+type keyMap struct {
+	Up        key.Binding
+	Down      key.Binding
+	PageUp    key.Binding
+	PageDown  key.Binding
+	Create    key.Binding
+	Edit      key.Binding
+	Delete    key.Binding
+	BulkReset key.Binding
+	Reload    key.Binding
+	Help      key.Binding
+	Quit      key.Binding
+	Cancel    key.Binding
+}
+
+func (k keyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Help, k.Quit, k.Cancel}
+}
+
+func (k keyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down, k.PageUp, k.PageDown},                 // first column
+		{k.Create, k.Edit, k.Delete, k.BulkReset, k.Reload}, // second column
+	}
+}
+
+var keys = keyMap{
+	Up:        key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("↑/k", "move up")),
+	Down:      key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("↓/j", "move down")),
+	PageUp:    key.NewBinding(key.WithKeys("pgup", "pageup"), key.WithHelp("pgup", "page up")),
+	PageDown:  key.NewBinding(key.WithKeys("pgdown", "pagedown"), key.WithHelp("pgdown", "page down")),
+	Create:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "create")),
+	Edit:      key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit")),
+	Delete:    key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "delete")),
+	BulkReset: key.NewBinding(key.WithKeys("b"), key.WithHelp("b", "bulk reset")),
+	Reload:    key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "reload")),
+	Help:      key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "toggle help")),
+	Quit:      key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+	Cancel:    key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "cancel")),
+}
+
 type AdminModel struct {
 	flashcards []store.Flashcard
 	selected   int
 	view       adminView
+	width      int
+	height     int
+	help       help.Model
+	keys       keyMap
 
 	// table for list view
 	table table.Model
@@ -69,7 +115,7 @@ func NewAdminModel(storeRef *store.Store, flashcards []store.Flashcard) *AdminMo
 	}
 
 	// Convert flashcards to table rows
-	rows := makeTableRows(flashcards)
+	rows := makeTableRows(flashcards, columns)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -102,17 +148,19 @@ func NewAdminModel(storeRef *store.Store, flashcards []store.Flashcard) *AdminMo
 		answerInput:   a,
 		revisitInput:  r,
 		storeRef:      storeRef,
+		help:          help.New(),
+		keys:          keys,
 	}
 }
 
 // makeTableRows converts flashcards to table rows
-func makeTableRows(flashcards []store.Flashcard) []table.Row {
+func makeTableRows(flashcards []store.Flashcard, columns []table.Column) []table.Row {
 	rows := make([]table.Row, len(flashcards))
 	for i, fc := range flashcards {
 		rows[i] = table.Row{
 			fmt.Sprintf("%d", fc.ID),
-			truncate(fc.Question, 40),
-			truncate(fc.Answer, 30),
+			truncate(fc.Question, columns[1].Width),
+			truncate(fc.Answer, columns[2].Width),
 			fmt.Sprintf("%d days", fc.RevisitIn),
 		}
 	}
@@ -122,41 +170,58 @@ func makeTableRows(flashcards []store.Flashcard) []table.Row {
 func (m *AdminModel) Init() tea.Cmd { return nil }
 
 func (m *AdminModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	keyMsg, ok := msg.(tea.KeyMsg)
-	if !ok {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		// Recalculate column widths
+		// Clamp ID and RevisitIn columns to a max width
+		idWidth := 6
+		revisitInWidth := 12
+		if m.width < 50 {
+			idWidth = 3
+			revisitInWidth = 8
+		}
+		totalFixedWidth := idWidth + revisitInWidth + 6 // Account for padding
+		remainingWidth := m.width - totalFixedWidth
+		questionWidth := int(float64(remainingWidth) * 0.6)
+		answerWidth := remainingWidth - questionWidth
+
+		m.table.SetColumns([]table.Column{
+			{Title: "ID", Width: idWidth},
+			{Title: "Question", Width: questionWidth},
+			{Title: "Answer", Width: answerWidth},
+			{Title: "Revisit In", Width: revisitInWidth},
+		})
+		m.table.SetHeight(m.height - 10) // Adjust height based on terminal
 		return m, nil
-	}
 
-	key := keyMsg.String()
-
-	switch m.view {
+	case tea.KeyMsg:
+		switch m.view {
 	case adminList:
-		return m.handleListView(key, keyMsg)
+		return m.handleListView(msg)
 	case adminCreate:
-		return m.handleCreateView(key, keyMsg)
+		return m.handleCreateView(msg)
 	case adminEdit:
-		return m.handleEditView(key, keyMsg)
+		return m.handleEditView(msg)
 	case adminConfirmDelete:
-		return m.handleDeleteConfirm(key)
+		return m.handleDeleteConfirm(msg)
 	case adminConfirmBulkReset:
-		return m.handleBulkResetConfirm(key)
-	case adminHelp:
-		if key == keyEsc {
-			m.view = adminList
+		return m.handleBulkResetConfirm(msg)
 		}
 	}
 	return m, nil
 }
 
-func (m *AdminModel) handleListView(key string, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch key {
-	case "q":
+func (m *AdminModel) handleListView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Quit):
 		return m, tea.Quit
-	case "c":
+	case key.Matches(msg, m.keys.Create):
 		m.view = adminCreate
 		m.resetForm()
 		return m, nil
-	case "e":
+	case key.Matches(msg, m.keys.Edit):
 		if len(m.flashcards) == 0 {
 			return m, nil
 		}
@@ -164,28 +229,28 @@ func (m *AdminModel) handleListView(key string, msg tea.KeyMsg) (tea.Model, tea.
 		m.loadSelectedIntoForm()
 		m.view = adminEdit
 		return m, nil
-	case "d":
+	case key.Matches(msg, m.keys.Delete):
 		if len(m.flashcards) == 0 {
 			return m, nil
 		}
 		m.selected = m.table.Cursor()
 		m.view = adminConfirmDelete
 		return m, nil
-	case "b":
+	case key.Matches(msg, m.keys.BulkReset):
 		if len(m.flashcards) == 0 {
 			return m, nil
 		}
 		m.view = adminConfirmBulkReset
 		return m, nil
-	case "r":
+	case key.Matches(msg, m.keys.Reload):
 		m.reload()
 		m.statusMsg = "Table refreshed"
 		m.errMsg = ""
 		return m, nil
-	case "?":
-		m.view = adminHelp
+	case key.Matches(msg, m.keys.Help):
+		m.help.ShowAll = !m.help.ShowAll
 		return m, nil
-	case "pgdown", "pagedown":
+	case key.Matches(msg, m.keys.PageDown):
 		newPos := m.table.Cursor() + 10
 		if newPos >= len(m.flashcards) {
 			newPos = len(m.flashcards) - 1
@@ -193,7 +258,7 @@ func (m *AdminModel) handleListView(key string, msg tea.KeyMsg) (tea.Model, tea.
 		m.table.SetCursor(newPos)
 		m.selected = newPos
 		return m, nil
-	case "pgup", "pageup":
+	case key.Matches(msg, m.keys.PageUp):
 		newPos := m.table.Cursor() - 10
 		if newPos < 0 {
 			newPos = 0
@@ -209,16 +274,17 @@ func (m *AdminModel) handleListView(key string, msg tea.KeyMsg) (tea.Model, tea.
 	}
 }
 
-func (m *AdminModel) handleCreateView(key string, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if key == keyEsc {
+func (m *AdminModel) handleCreateView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Cancel):
 		m.view = adminList
 		return m, nil
 	}
-	if key == keyTab {
+	if msg.String() == keyTab {
 		m.cycleFocus()
 		return m, nil
 	}
-	if key == keyEnter {
+	if msg.String() == keyEnter {
 		m.createFlashcard()
 		return m, nil
 	}
@@ -226,16 +292,17 @@ func (m *AdminModel) handleCreateView(key string, msg tea.KeyMsg) (tea.Model, te
 	return m, nil
 }
 
-func (m *AdminModel) handleEditView(key string, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if key == keyEsc {
+func (m *AdminModel) handleEditView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Cancel):
 		m.view = adminList
 		return m, nil
 	}
-	if key == keyTab {
+	if msg.String() == keyTab {
 		m.cycleFocus()
 		return m, nil
 	}
-	if key == keyEnter {
+	if msg.String() == keyEnter {
 		m.updateFlashcard()
 		return m, nil
 	}
@@ -243,23 +310,33 @@ func (m *AdminModel) handleEditView(key string, msg tea.KeyMsg) (tea.Model, tea.
 	return m, nil
 }
 
-func (m *AdminModel) handleDeleteConfirm(key string) (tea.Model, tea.Cmd) {
-	if key == "y" {
+func (m *AdminModel) handleDeleteConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Cancel):
+		m.view = adminList
+		return m, nil
+	}
+	if msg.String() == "y" {
 		m.deleteFlashcard()
 		return m, nil
 	}
-	if key == "n" || key == keyEsc {
+	if msg.String() == "n" {
 		m.view = adminList
 	}
 	return m, nil
 }
 
-func (m *AdminModel) handleBulkResetConfirm(key string) (tea.Model, tea.Cmd) {
-	if key == "y" {
+func (m *AdminModel) handleBulkResetConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Cancel):
+		m.view = adminList
+		return m, nil
+	}
+	if msg.String() == "y" {
 		m.bulkResetRevisitIn()
 		return m, nil
 	}
-	if key == "n" || key == keyEsc {
+	if msg.String() == "n" {
 		m.view = adminList
 	}
 	return m, nil
@@ -282,13 +359,15 @@ func (m *AdminModel) View() string {
 		Foreground(lipgloss.Color("240")).
 		Padding(0, 1)
 
-	helpBar := helpStyle.Render("[↑/↓] navigate  [PgUp/PgDn] page  [c] create  [e] edit  [d] delete  [b] bulk reset  [r] reload  [?] help  [q] quit")
+	helpBar := m.help.View(m.keys)
 
 	if m.errMsg != "" {
 		helpBar += "\n" + errorStyle.Render("✗ "+m.errMsg)
 	} else if m.statusMsg != "" {
 		helpBar += "\n" + successStyle.Render("✓ "+m.statusMsg)
 	}
+
+	var mainContent string
 
 	switch m.view {
 	case adminList:
@@ -300,7 +379,7 @@ func (m *AdminModel) View() string {
 			b.WriteString(m.table.View() + "\n")
 		}
 		b.WriteString("\n" + helpBar)
-		return b.String()
+		mainContent = b.String()
 
 	case adminCreate:
 		qLabel := labelStyle.Render("Question:")
@@ -329,7 +408,7 @@ func (m *AdminModel) View() string {
 
 		helpText := helpStyle.Render("[tab] next field  [enter] save  [esc] cancel")
 
-		return fmt.Sprintf("%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n\n",
+		mainContent = fmt.Sprintf("%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n\n",
 			qLabel, qInput, aLabel, aInput, rLabel, rInput, helpText)
 
 	case adminEdit:
@@ -361,46 +440,22 @@ func (m *AdminModel) View() string {
 
 		helpText := helpStyle.Render("[tab] next field  [enter] update  [esc] cancel")
 
-		return fmt.Sprintf("%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n\n",
+		mainContent = fmt.Sprintf("%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n%s\n\n%s\n\n",
 			title, qLabel, qInput, aLabel, aInput, rLabel, rInput, helpText)
 
 	case adminConfirmDelete:
 		warning := errorStyle.Render(fmt.Sprintf("Delete Flashcard ID %d?", m.flashcards[m.selected].ID))
 		options := helpStyle.Render("[y] yes  [n] no  [esc] cancel")
-		return fmt.Sprintf("%s\n\n%s\n\n\n\n", warning, options)
+		mainContent = fmt.Sprintf("%s\n\n%s\n\n\n\n", warning, options)
 
 	case adminConfirmBulkReset:
 		title := titleStyle.Render("⚡ Bulk Reset RevisitIn")
 		warning := errorStyle.Render(fmt.Sprintf("Set RevisitIn to 0 for ALL %d flashcards?", len(m.flashcards)))
 		info := infoStyle.Render("This will make all flashcards due for immediate review.")
 		options := helpStyle.Render("[y] yes  [n] no  [esc] cancel")
-		return fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n\n%s", title, warning, info, options, helpBar)
-
-	case adminHelp:
-		title := titleStyle.Render("❓ Help")
-		helpText := `Navigation:
-  ↑/k         Move up
-  ↓/j         Move down
-  PgUp        Jump 10 rows up
-  PgDn        Jump 10 rows down
-  
-Actions:
-  c           Create new flashcard
-  e           Edit selected flashcard
-  d           Delete selected flashcard
-  b           Bulk reset RevisitIn to 0 (all cards)
-  r           Reload flashcards from database
-  ?           Show this help
-  q           Quit
-  
-In edit/create mode:
-  tab         Next field
-  enter       Save changes
-  esc         Cancel`
-
-		return fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s", title, helpText, helpStyle.Render("[esc] back"), helpBar)
+		mainContent = fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n\n%s", title, warning, info, options, helpBar)
 	}
-	return ""
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, mainContent)
 }
 
 // helpers
@@ -514,7 +569,7 @@ func (m *AdminModel) reload() {
 	m.flashcards = list
 
 	// Update table with new data
-	rows := makeTableRows(m.flashcards)
+	rows := makeTableRows(m.flashcards, m.table.Columns())
 	m.table.SetRows(rows)
 
 	// Adjust cursor if needed
