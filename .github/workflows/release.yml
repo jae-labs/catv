@@ -103,12 +103,16 @@ jobs:
           fetch-depth: 0
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
-          path: dist
+          path: artifacts
 
-      - name: Display structure of downloaded files
-        run: ls -R dist
+      - name: Organize release files
+        run: |
+          mkdir -p dist
+          find artifacts -name "*.tar.gz" -exec cp {} dist/ \;
+          find artifacts -name "catv-*" -type f ! -name "*.tar.gz" -exec cp {} dist/ \;
+          ls -lh dist/
 
       - name: Generate version tag
         id: tag
@@ -150,9 +154,7 @@ jobs:
             ```bash
             curl -sSL https://raw.githubusercontent.com/luiz1361/catv/main/install.sh | bash
             ```
-          files: |
-            dist/**/*.tar.gz
-            dist/**/catv-*
+          files: dist/*
           draft: false
           prerelease: false
         env:
@@ -176,13 +178,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Latest Development Build"
+          name: "Latest Production Build"
           body: |
-            ## Latest Development Build
+            ## Latest Production Build
             
             This is an automatically generated release from the latest `main` branch.
-            
-            **Note**: This is a development build and may be unstable. For stable releases, use the versioned releases.
             
             ## Installation
             
@@ -196,9 +196,7 @@ jobs:
             ```bash
             curl -sSL https://raw.githubusercontent.com/luiz1361/catv/main/install.sh | bash
             ```
-          files: |
-            dist/**/*.tar.gz
-            dist/**/catv-*
+          files: dist/*
           prerelease: false
           fail_on_unmatched_files: false
         env:
