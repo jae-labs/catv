@@ -52,7 +52,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: catv-linux-${{ matrix.arch }}
-          path: cmd/catv/dist/catv-linux-${{ matrix.arch }}.tar.gz
+          path: |
+            cmd/catv/dist/catv-linux-${{ matrix.arch }}.tar.gz
+            cmd/catv/dist/catv-linux-${{ matrix.arch }}
 
   build-darwin:
     name: Build macOS
@@ -85,7 +87,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: catv-darwin-${{ matrix.arch }}
-          path: cmd/catv/dist/catv-darwin-${{ matrix.arch }}.tar.gz
+          path: |
+            cmd/catv/dist/catv-darwin-${{ matrix.arch }}.tar.gz
+            cmd/catv/dist/catv-darwin-${{ matrix.arch }}
 
 
   release:
@@ -141,7 +145,14 @@ jobs:
             tar -xzf catv-*.tar.gz
             ./catv-* --help
             ```
-          files: dist/**/*.tar.gz
+            
+            Or use the install script:
+            ```bash
+            curl -sSL https://raw.githubusercontent.com/luiz1361/catv/main/install.sh | bash
+            ```
+          files: |
+            dist/**/*.tar.gz
+            dist/**/catv-*
           draft: false
           prerelease: false
         env:
@@ -180,8 +191,15 @@ jobs:
             - **Linux ARM64**: `catv-linux-arm64.tar.gz`
             - **macOS AMD64** (Intel): `catv-darwin-amd64.tar.gz`
             - **macOS ARM64** (Apple Silicon): `catv-darwin-arm64.tar.gz`
-          files: dist/**/*.tar.gz
-          prerelease: true
+            
+            Or use the install script:
+            ```bash
+            curl -sSL https://raw.githubusercontent.com/luiz1361/catv/main/install.sh | bash
+            ```
+          files: |
+            dist/**/*.tar.gz
+            dist/**/catv-*
+          prerelease: false
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
