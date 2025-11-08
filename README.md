@@ -1,5 +1,7 @@
 # CATV - Cards Against The Void
 
+[![Build Status](https://github.com/luiz1361/catv/actions/workflows/go.yml/badge.svg)](https://github.com/luiz1361/catv/actions) [![GitHub tag](https://img.shields.io/github/tag/luiz1361/catv.svg)](https://github.com/luiz1361/catv/releases)
+
 CATV (Cards Against The Void) is a minimal command-line utility for reviewing notes. 'Flashcards' can be written in markdown-like syntax.
 
 **Goal:** Be super simple to use—just generate and review flashcards with minimal setup.
