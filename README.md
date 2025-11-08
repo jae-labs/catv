@@ -9,7 +9,7 @@
   <a href="https://buymeacoffee.com/luiz1361"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-donate-orange.svg?logo=buymeacoffee" alt="Buy Me A Coffee"></a>
 </p>
 
-CATV (Cards Against The Void) is a fast, minimal command-line tool for turning your notes into interactive flashcards and reviewing them with spaced repetition. Simply point CATV at your folder of markdown notes, and it uses Ollama's local AI models (LLMs) to automatically generate flashcards and quiz you in a colorful terminal interface. CATV is written in Go for minimal dependencies—all you need is the Ollama client app from [ollama.com](https://ollama.com) and the compiled binary from this repository. No cloud, no subscriptions, no hidden costs.
+CATV (Cards Against The Void) is a fast, minimal command-line tool for turning your notes into interactive flashcards and reviewing them with spaced repetition. Simply point CATV at your folder of markdown notes, and it uses Ollama's local AI models (LLMs) to automatically generate flashcards and quiz you in a colorful terminal interface. CATV is written in Go for minimal dependencies—all you need is the Ollama App from [ollama.com](https://ollama.com) and the compiled binary from this repository. No cloud, no subscriptions, no hidden costs.
 
 **Why CATV?**
 - Effortlessly convert your markdown notes into flashcards using local AI (LLM)
@@ -19,7 +19,7 @@ CATV (Cards Against The Void) is a fast, minimal command-line tool for turning y
 - Secure and offline: no internet required, no data sent to third parties
 - Free and open-source: no hidden costs or paywalls
 
-Designed for simplicity, privacy, and security, working entirely offline and storing your cards locally in SQLite. Originally built and tested for macOS, it runs anywhere Ollama is supported.
+Designed for simplicity, privacy, and security. Runs entirely offline and stores your cards locally in a SQLite database. It was developed and tested on macOS, but works on any platform that supports the Ollama App.
 
 ## Quick Start
 
@@ -69,7 +69,7 @@ Tested on a MacBook M2 with 16GB of RAM using the llama3.1 model. Performance an
 
 <details>
 <summary>What platforms are supported?</summary>
-Any platform with Go and Ollama (tested on macOS)
+Any platform supported by the Ollama App (tested on macOS)
 </details>
 
 <details>
@@ -84,7 +84,7 @@ In a local SQLite database.
 
 <details>
 <summary>Can I use my own markdown files?</summary>
-Yes, just point CATV to your folder of markdown notes.
+Yes, just point CATV to your folder containing your markdown files.
 </details>
 
 <details>
@@ -99,12 +99,12 @@ You can use the `--model` flag to specify the Ollama model for flashcard generat
 
 <details>
 <summary>Is CATV open source?</summary>
-Yes, licensed under MIT.
+See [LICENSE](LICENSE).
 </details>
 
 <details>
 <summary>How do I contribute?</summary>
-Open a pull request or issue on GitHub.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 </details>
 
 ## Screenshots
@@ -120,10 +120,7 @@ Below are some screenshots of CATV in action:
 ![Screenshot 4](screenshots/4.png)
 
 ## Contributing
-
-See the [CONTRIBUTING.md](CONTRIBUTING.md) file for contribution guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
-Licensed under the MIT License — see the [LICENSE](./LICENSE) file in this repository for the full text.
-
-Reference: [MIT License](https://choosealicense.com/licenses/mit/)
+See [LICENSE](LICENSE).
