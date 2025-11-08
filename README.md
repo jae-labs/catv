@@ -50,6 +50,7 @@ Designed for simplicity, privacy, and security, working entirely offline and sto
 That's it! No extra configuration needed. It will use the local Ollama API and store flashcards in a local SQLite database.
 
 
+
 ## Features
 
 | Feature                        | Description                                         |
@@ -69,7 +70,6 @@ Tested on a MacBook M2 with 16GB of RAM using the llama3.1 model. Performance an
 <details>
 <summary>What platforms are supported?</summary>
 Any platform with Go and Ollama (tested on macOS)
-
 </details>
 
 <details>
