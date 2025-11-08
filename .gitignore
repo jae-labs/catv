@@ -1,8 +1,5 @@
-# Ignore SQLite database used by the flashcards app
-flashcards.db
-
 # Ignore macOS Finder metadata files
 .DS_Store
 
-# Ignore the binary
-catv
+# Ignore the binary only if it's at repo root
+/catv
