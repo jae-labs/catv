@@ -25,6 +25,13 @@ const (
 	adminHelp
 )
 
+// Key constants
+const (
+	keyEsc   = "esc"
+	keyEnter = "enter"
+	keyTab   = "tab"
+)
+
 type AdminModel struct {
 	flashcards []store.Flashcard
 	selected   int
@@ -115,121 +122,145 @@ func makeTableRows(flashcards []store.Flashcard) []table.Row {
 func (m *AdminModel) Init() tea.Cmd { return nil }
 
 func (m *AdminModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		key := msg.String()
-		switch m.view {
-		case adminList:
-			switch key {
-			case "q":
-				return m, tea.Quit
-			case "c":
-				m.view = adminCreate
-				m.resetForm()
-				return m, nil
-			case "e":
-				if len(m.flashcards) == 0 {
-					break
-				}
-				m.selected = m.table.Cursor()
-				m.loadSelectedIntoForm()
-				m.view = adminEdit
-				return m, nil
-			case "d":
-				if len(m.flashcards) == 0 {
-					break
-				}
-				m.selected = m.table.Cursor()
-				m.view = adminConfirmDelete
-				return m, nil
-			case "b":
-				if len(m.flashcards) == 0 {
-					break
-				}
-				m.view = adminConfirmBulkReset
-				return m, nil
-			case "r":
-				m.reload()
-				m.statusMsg = "Table refreshed"
-				m.errMsg = ""
-				return m, nil
-			case "?":
-				m.view = adminHelp
-				return m, nil
-			case "pgdown", "pagedown":
-				// Page down - jump 10 rows down
-				newPos := m.table.Cursor() + 10
-				if newPos >= len(m.flashcards) {
-					newPos = len(m.flashcards) - 1
-				}
-				m.table.SetCursor(newPos)
-				m.selected = newPos
-				return m, nil
-			case "pgup", "pageup":
-				// Page up - jump 10 rows up
-				newPos := m.table.Cursor() - 10
-				if newPos < 0 {
-					newPos = 0
-				}
-				m.table.SetCursor(newPos)
-				m.selected = newPos
-				return m, nil
-			default:
-				// Let table handle navigation
-				m.table, cmd = m.table.Update(msg)
-				m.selected = m.table.Cursor()
-				return m, cmd
-			}
-		case adminCreate:
-			if key == "esc" {
-				m.view = adminList
-				return m, nil
-			}
-			if key == "tab" {
-				m.cycleFocus()
-				return m, nil
-			}
-			if key == "enter" {
-				m.createFlashcard()
-				return m, nil
-			}
-			m.updateInputs(msg)
-		case adminEdit:
-			if key == "esc" {
-				m.view = adminList
-				return m, nil
-			}
-			if key == "tab" {
-				m.cycleFocus()
-				return m, nil
-			}
-			if key == "enter" {
-				m.updateFlashcard()
-				return m, nil
-			}
-			m.updateInputs(msg)
-		case adminConfirmDelete:
-			if key == "y" {
-				m.deleteFlashcard()
-				return m, nil
-			}
-			if key == "n" || key == "esc" {
-				m.view = adminList
-			}
-		case adminConfirmBulkReset:
-			if key == "y" {
-				m.bulkResetRevisitIn()
-				return m, nil
-			}
-			if key == "n" || key == "esc" {
-				m.view = adminList
-			}
-		case adminHelp:
-			if key == "esc" {
-				m.view = adminList
-			}
+	keyMsg, ok := msg.(tea.KeyMsg)
+	if !ok {
+		return m, nil
+	}
+
+	key := keyMsg.String()
+
+	switch m.view {
+	case adminList:
+		return m.handleListView(key, keyMsg)
+	case adminCreate:
+		return m.handleCreateView(key, keyMsg)
+	case adminEdit:
+		return m.handleEditView(key, keyMsg)
+	case adminConfirmDelete:
+		return m.handleDeleteConfirm(key)
+	case adminConfirmBulkReset:
+		return m.handleBulkResetConfirm(key)
+	case adminHelp:
+		if key == keyEsc {
+			m.view = adminList
 		}
+	}
+	return m, nil
+}
+
+func (m *AdminModel) handleListView(key string, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch key {
+	case "q":
+		return m, tea.Quit
+	case "c":
+		m.view = adminCreate
+		m.resetForm()
+		return m, nil
+	case "e":
+		if len(m.flashcards) == 0 {
+			return m, nil
+		}
+		m.selected = m.table.Cursor()
+		m.loadSelectedIntoForm()
+		m.view = adminEdit
+		return m, nil
+	case "d":
+		if len(m.flashcards) == 0 {
+			return m, nil
+		}
+		m.selected = m.table.Cursor()
+		m.view = adminConfirmDelete
+		return m, nil
+	case "b":
+		if len(m.flashcards) == 0 {
+			return m, nil
+		}
+		m.view = adminConfirmBulkReset
+		return m, nil
+	case "r":
+		m.reload()
+		m.statusMsg = "Table refreshed"
+		m.errMsg = ""
+		return m, nil
+	case "?":
+		m.view = adminHelp
+		return m, nil
+	case "pgdown", "pagedown":
+		newPos := m.table.Cursor() + 10
+		if newPos >= len(m.flashcards) {
+			newPos = len(m.flashcards) - 1
+		}
+		m.table.SetCursor(newPos)
+		m.selected = newPos
+		return m, nil
+	case "pgup", "pageup":
+		newPos := m.table.Cursor() - 10
+		if newPos < 0 {
+			newPos = 0
+		}
+		m.table.SetCursor(newPos)
+		m.selected = newPos
+		return m, nil
+	default:
+		var cmd tea.Cmd
+		m.table, cmd = m.table.Update(msg)
+		m.selected = m.table.Cursor()
+		return m, cmd
+	}
+}
+
+func (m *AdminModel) handleCreateView(key string, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if key == keyEsc {
+		m.view = adminList
+		return m, nil
+	}
+	if key == keyTab {
+		m.cycleFocus()
+		return m, nil
+	}
+	if key == keyEnter {
+		m.createFlashcard()
+		return m, nil
+	}
+	m.updateInputs(msg)
+	return m, nil
+}
+
+func (m *AdminModel) handleEditView(key string, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if key == keyEsc {
+		m.view = adminList
+		return m, nil
+	}
+	if key == keyTab {
+		m.cycleFocus()
+		return m, nil
+	}
+	if key == keyEnter {
+		m.updateFlashcard()
+		return m, nil
+	}
+	m.updateInputs(msg)
+	return m, nil
+}
+
+func (m *AdminModel) handleDeleteConfirm(key string) (tea.Model, tea.Cmd) {
+	if key == "y" {
+		m.deleteFlashcard()
+		return m, nil
+	}
+	if key == "n" || key == keyEsc {
+		m.view = adminList
+	}
+	return m, nil
+}
+
+func (m *AdminModel) handleBulkResetConfirm(key string) (tea.Model, tea.Cmd) {
+	if key == "y" {
+		m.bulkResetRevisitIn()
+		return m, nil
+	}
+	if key == "n" || key == keyEsc {
+		m.view = adminList
 	}
 	return m, nil
 }
@@ -403,11 +434,12 @@ func (m *AdminModel) loadSelectedIntoForm() {
 
 func (m *AdminModel) updateInputs(msg tea.Msg) {
 	// Update the focused input with the key message
-	if m.questionInput.Focused() {
+	switch {
+	case m.questionInput.Focused():
 		m.questionInput, _ = m.questionInput.Update(msg)
-	} else if m.answerInput.Focused() {
+	case m.answerInput.Focused():
 		m.answerInput, _ = m.answerInput.Update(msg)
-	} else if m.revisitInput.Focused() {
+	case m.revisitInput.Focused():
 		m.revisitInput, _ = m.revisitInput.Update(msg)
 	}
 }

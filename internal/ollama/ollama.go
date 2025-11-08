@@ -15,11 +15,13 @@ type OllamaRequest struct {
 // GenerateQA sends a prompt to the Ollama API and returns the response
 func GenerateQA(model, url, prompt string) (string, error) {
 	body, _ := json.Marshal(OllamaRequest{Model: model, Prompt: prompt})
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // #nosec G107 - URL is from config
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	var fullResponse string
 	dec := json.NewDecoder(resp.Body)
@@ -45,15 +47,17 @@ func ParseFlashcards(response string) ([]map[string]string, error) {
 	var q, a string
 	for _, line := range lines {
 		l := trimSpace(line)
-		if len(l) > 1 && (l[:2] == "Q:" || l[:2] == "A:") {
-			if l[:2] == "Q:" {
-				q = trimSpace(l[2:])
-			} else if l[:2] == "A:" {
-				a = trimSpace(l[2:])
-				if q != "" && a != "" {
-					qas = append(qas, map[string]string{"question": q, "answer": a})
-					q, a = "", ""
-				}
+		if len(l) < 2 {
+			continue
+		}
+		switch l[:2] {
+		case "Q:":
+			q = trimSpace(l[2:])
+		case "A:":
+			a = trimSpace(l[2:])
+			if q != "" && a != "" {
+				qas = append(qas, map[string]string{"question": q, "answer": a})
+				q = "" // Reset for next Q/A pair
 			}
 		}
 	}

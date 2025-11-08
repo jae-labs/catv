@@ -37,7 +37,9 @@ func (s *Store) GetFlashcardsForReview() ([]Flashcard, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var flashcards []Flashcard
 	for rows.Next() {
@@ -57,7 +59,9 @@ func (s *Store) GetAllFlashcards() ([]Flashcard, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 	var flashcards []Flashcard
 	for rows.Next() {
 		var fc Flashcard
@@ -106,5 +110,5 @@ func (s *Store) InsertFlashcard(fc Flashcard) error {
 
 // Close closes the database connection
 func (s *Store) Close() {
-	s.DB.Close()
+	_ = s.DB.Close()
 }

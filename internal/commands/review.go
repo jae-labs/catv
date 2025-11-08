@@ -51,5 +51,3 @@ var ReviewCmd = &cobra.Command{
 		}
 	},
 }
-
-// ...existing code...

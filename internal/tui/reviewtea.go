@@ -73,19 +73,20 @@ func (m *ReviewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.nextCard()
 			}
 		case viewRevisitIn:
-			if msg.String() == "1" {
+			switch msg.String() {
+			case "1":
 				m.revisitIn[m.current] = 1
 				m.resultMsg = "Revisit in 1 day"
 				m.nextCard()
-			} else if msg.String() == "3" {
+			case "3":
 				m.revisitIn[m.current] = 3
 				m.resultMsg = "Revisit in 3 days"
 				m.nextCard()
-			} else if msg.String() == "7" {
+			case "7":
 				m.revisitIn[m.current] = 7
 				m.resultMsg = "Revisit in 7 days"
 				m.nextCard()
-			} else if msg.String() == "9" {
+			case "9":
 				m.revisitIn[m.current] = 9
 				m.resultMsg = "Revisit in 9 days"
 				m.nextCard()
@@ -171,9 +172,7 @@ func (m *ReviewModel) View() string {
 	case viewRevisitIn:
 		content = fmt.Sprintf("%s\n\n%s\n%s", infoStyle.Render("Revisit in (days): [1]  [3]  [7]  [9]"), m.resultMsg, bottomBar)
 	case viewDone:
-		content = fmt.Sprintf("%s\n%s", successStyle.Render("Review complete! Press q to quit.\n"), bottomBar)
+		content = fmt.Sprintf("%s\n%s", successStyle.Render("Review complete 🎉🎉🎉\n"), bottomBar)
 	}
 	return frame.Render(content) + "\n" + exitMsg
 }
-
-// ...existing code...
