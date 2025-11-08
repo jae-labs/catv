@@ -111,16 +111,6 @@ Use `ollama pull <model>` to update or change models.
 You can use the `--model` flag to specify the Ollama model for flashcard generation.
 </details>
 
-<details>
-<summary>Is CATV open source?</summary>
-See [LICENSE](LICENSE).
-</details>
-
-<details>
-<summary>How do I contribute?</summary>
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-</details>
-
 ## Screenshots
 
 Below are some screenshots of CATV in action:

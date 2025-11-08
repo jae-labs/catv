@@ -261,7 +261,7 @@ func (m *AdminModel) handleBulkResetConfirm(key string) (tea.Model, tea.Cmd) {
 	}
 	if key == "n" || key == keyEsc {
 		m.view = adminList
-			}
+	}
 	return m, nil
 }
 
