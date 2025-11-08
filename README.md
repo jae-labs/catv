@@ -1,6 +1,4 @@
 
-# CATV - Cards Against The Void
-
 <p align="center">
 <img src="logo/logo-xs.png" alt="CATV Logo" width="120"/>
 </p>
@@ -22,7 +20,7 @@ CATV (Cards Against The Void) is a fast, minimal command-line tool for turning y
 - Secure and offline: no internet required, no data sent to third parties
 - Free and open-source: no hidden costs or paywalls
 
-CATV is designed for simplicity, privacy, and security, working entirely offline and storing your cards locally in SQLite. Originally built and tested for macOS, it runs anywhere Ollama is supported.
+Designed for simplicity, privacy, and security, working entirely offline and storing your cards locally in SQLite. Originally built and tested for macOS, it runs anywhere Ollama is supported.
 
 ## Quick Start
 
@@ -34,7 +32,7 @@ CATV is designed for simplicity, privacy, and security, working entirely offline
   ollama pull llama3.1
   ```
 
-3. **Clone and set up CATV:**
+3. **Clone and set up:**
   ```bash
   curl -L https://github.com/luiz1361/catv/releases/latest/download/catv-darwin-arm64 -o catv && chmod +x catv
   ```
@@ -49,7 +47,7 @@ CATV is designed for simplicity, privacy, and security, working entirely offline
   ./catv
   ```
 
-That's it! No extra configuration needed. CATV will use the local Ollama API and store flashcards in a SQLite database.
+That's it! No extra configuration needed. It will use the local Ollama API and store flashcards in a local SQLite database.
 
 
 ## Features
@@ -63,10 +61,15 @@ That's it! No extra configuration needed. CATV will use the local Ollama API and
 | No Extra Configuration         | Works out-of-the-box with minimal setup              |
 
 ## FAQ
+<details>
+<summary>What are the system requirements?</summary>
+Tested on a MacBook M2 with 16GB of RAM using the llama3.1 model. Performance and compatibility may vary on other systems.
+</details>
 
 <details>
 <summary>What platforms are supported?</summary>
 Any platform with Go and Ollama (tested on macOS)
+
 </details>
 
 <details>
@@ -101,7 +104,7 @@ Open a pull request or issue on GitHub.
 
 ## Screenshots
 
-Below are some screenshots of CATV (Cards Against The Void) in action:
+Below are some screenshots of CATV in action:
 
 ![Screenshot 1](screenshots/1.png)
 
