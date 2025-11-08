@@ -155,9 +155,9 @@ func (m *ReviewModel) View() string {
 		}
 	}
 
-	// Bottom bar: [32m[1m[34m left, current/total center, [31m[1m[34m right
+	// Bottom bar: ✅ left, current/total center, ❌ right
 	bottomBar := lipgloss.NewStyle().Width(width - 2).Align(lipgloss.Center).Render(
-		fmt.Sprintf("%-10s%s%10s", fmt.Sprintf("[32m[1m[34m %d", correctCount), fmt.Sprintf("%d/%d", current, total), fmt.Sprintf("[31m[1m[34m %d", incorrectCount)),
+		fmt.Sprintf("%-10s%s%10s", fmt.Sprintf("✅ %d", correctCount), fmt.Sprintf("%d/%d", current, total), fmt.Sprintf("❌ %d", incorrectCount)),
 	)
 
 	exitMsg := infoStyle.Render("Press q to exit at any time.")

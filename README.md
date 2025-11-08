@@ -34,7 +34,7 @@ Designed for simplicity, privacy, and security. Runs entirely offline and stores
 
 3. **Install CATV:**
   ```bash
-  curl -fsSL https://github.com/luiz1361/catv/releases/latest/download/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/luiz1361/catv/refs/heads/main/install.sh | bash
   ```
 
 4. **Generate flashcards from your markdown notes**
