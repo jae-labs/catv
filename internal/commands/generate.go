@@ -26,13 +26,12 @@ func (m spinnerModel) Init() tea.Cmd {
 }
 
 func (m spinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case spinner.TickMsg:
+	if tickMsg, ok := msg.(spinner.TickMsg); ok {
 		if m.done {
 			return m, tea.Quit
 		}
 		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
+		m.spinner, cmd = m.spinner.Update(tickMsg)
 		return m, cmd
 	}
 	return m, nil
@@ -80,7 +79,7 @@ var GenerateCmd = &cobra.Command{
 				continue
 			}
 
-			data, err := os.ReadFile(f)
+			data, err := os.ReadFile(filepath.Clean(f))
 			if err != nil {
 				tui.PrintError("Read error:", err)
 				continue
@@ -151,7 +150,9 @@ Markdown:
 				}
 			}()
 
-			p.Run()
+			if _, err := p.Run(); err != nil {
+				tui.PrintError("TUI error:", err)
+			}
 			if sm.msg != "" {
 				if sm.done {
 					tui.PrintSuccess(sm.msg)
@@ -183,10 +184,8 @@ func getMarkdownFiles(path string) ([]string, error) {
 			}
 			return nil
 		})
-	} else {
-		if filepath.Ext(path) == ".md" || filepath.Ext(path) == ".markdown" {
-			files = append(files, path)
-		}
+	} else if filepath.Ext(path) == ".md" || filepath.Ext(path) == ".markdown" {
+		files = append(files, path)
 	}
 	return files, err
 }
