@@ -37,9 +37,9 @@ Designed for simplicity, privacy, and security, working entirely offline and sto
   curl -L https://github.com/luiz1361/catv/releases/latest/download/catv-darwin-arm64 -o catv && chmod +x catv
   ```
 
-4. **Generate flashcards from markdown file(s):**
+4. **Create flashcards from your markdown notes:**
   ```bash
-  ./catv generate --path <full-file(s)-path>
+  ./catv generate --path <path-to-your-markdown-files>
   ```
 
 5. **Review your flashcards:**

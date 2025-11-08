@@ -29,9 +29,15 @@ jobs:
 
       - name: Build binary
         run: |
-          mkdir -p dist
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
-          go build -o dist/catv-${{ matrix.os }}-${{ matrix.arch }}
+            mkdir -p dist
+            # Enable CGO for go-sqlite3 on amd64 targets
+            if [[ "${{ matrix.arch }}" == "amd64" ]]; then
+              CGO_ENABLED=1 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
+              go build -o dist/catv-${{ matrix.os }}-${{ matrix.arch }}
+            else
+              CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
+              go build -o dist/catv-${{ matrix.os }}-${{ matrix.arch }}
+            fi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

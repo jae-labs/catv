@@ -24,7 +24,9 @@ jobs:
         go-version: '1.24'
 
     - name: Build
-      run: go build -v ./...
+      run: |
+        # Enable CGO for go-sqlite3 compatibility
+        CGO_ENABLED=1 go build -v ./...
 
     - name: Test
       run: go test -v ./...
