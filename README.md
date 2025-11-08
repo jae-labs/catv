@@ -32,12 +32,12 @@ Designed for simplicity, privacy, and security, working entirely offline and sto
   ollama pull llama3.1
   ```
 
-3. **Clone and set up:**
+3. **Download and set up:**
   ```bash
   curl -L https://github.com/luiz1361/catv/releases/latest/download/catv-darwin-arm64 -o catv && chmod +x catv
   ```
 
-4. **Create flashcards from your markdown notes:**
+4. **Generate flashcards from your markdown notes:**
   ```bash
   ./catv generate --path <path-to-your-markdown-files>
   ```
@@ -47,7 +47,7 @@ Designed for simplicity, privacy, and security, working entirely offline and sto
   ./catv
   ```
 
-That's it! No extra configuration needed. It will use the local Ollama API and store flashcards in a local SQLite database.
+That's it! No extra configuration needed. It will use the local Ollama API and store flashcards in a SQLite database.
 
 
 
