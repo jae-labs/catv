@@ -112,7 +112,7 @@ Markdown:
 					return
 				}
 				// DEBUG: Print raw Ollama response for troubleshooting
-				tui.PrintInfo("Raw Ollama response:")
+				// tui.PrintInfo("Raw Ollama response:")
 				// tui.PrintInfo(resp)
 				qas, err := ollama.ParseFlashcards(resp)
 				if err != nil {

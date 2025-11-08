@@ -121,8 +121,9 @@ Below are some screenshots of CATV in action:
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+See the [CONTRIBUTING.md](CONTRIBUTING.md) file for contribution guidelines.
 
 ## License
+Licensed under the MIT License — see the [LICENSE](./LICENSE) file in this repository for the full text.
 
-[MIT](https://choosealicense.com/licenses/mit/)
+Reference: [MIT License](https://choosealicense.com/licenses/mit/)
