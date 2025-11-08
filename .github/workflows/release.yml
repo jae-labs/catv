@@ -176,13 +176,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Latest Development Build"
+          name: "Latest Production Build"
           body: |
-            ## Latest Development Build
+            ## Latest Production Build
             
             This is an automatically generated release from the latest `main` branch.
-            
-            **Note**: This is a development build and may be unstable. For stable releases, use the versioned releases.
             
             ## Installation
             
