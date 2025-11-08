@@ -3,11 +3,21 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/luiz1361/catv/actions"><img src="https://github.com/luiz1361/catv/actions/workflows/go.yml/badge.svg" alt="Build Status"></a>
-  <a href="https://github.com/luiz1361/catv/releases"><img src="https://img.shields.io/github/tag/luiz1361/catv.svg" alt="GitHub tag"></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-  <a href="https://buymeacoffee.com/luiz1361"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-donate-orange.svg?logo=buymeacoffee" alt="Buy Me A Coffee"></a>
+<a href="https://codecov.io/gh/luiz1361/catv"><img src="https://codecov.io/gh/luiz1361/catv/branch/main/graph/badge.svg" alt="codecov"></a>
+<a href="https://github.com/luiz1361/catv/issues"><img src="https://img.shields.io/github/issues/luiz1361/catv" alt="GitHub issues"></a>
+<a href="https://github.com/luiz1361/catv/stargazers"><img src="https://img.shields.io/github/stars/luiz1361/catv" alt="GitHub stars"></a>
+<a href="https://github.com/luiz1361/catv/network"><img src="https://img.shields.io/github/forks/luiz1361/catv" alt="GitHub forks"></a>
+<a href="https://github.com/luiz1361/catv/releases"><img src="https://img.shields.io/github/downloads/luiz1361/catv/total" alt="Downloads"></a>
+<a href="https://github.com/luiz1361/catv/actions/workflows/ci.yml"><img src="https://github.com/luiz1361/catv/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="https://github.com/luiz1361/catv/actions/workflows/release.yml"><img src="https://github.com/luiz1361/catv/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+<a href="https://goreportcard.com/report/github.com/luiz1361/catv"><img src="https://goreportcard.com/badge/github.com/luiz1361/catv" alt="Go Report Card"></a>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/luiz1361/catv" alt="License"></a>
+<a href="https://github.com/luiz1361/catv/releases"><img src="https://img.shields.io/github/v/release/luiz1361/catv" alt="GitHub release"></a>
+<a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/luiz1361/catv" alt="Go Version"></a>
+<a href="https://buymeacoffee.com/luiz1361"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-donate-orange.svg?logo=buymeacoffee" alt="Buy Me A Coffee"></a>
 </p>
+
+
 
 CATV (Cards Against The Void) is a fast, minimal command-line tool for turning your notes into interactive flashcards and reviewing them with spaced repetition. Simply point CATV at your folder of markdown notes, and it uses Ollama's local AI models (LLMs) to automatically generate flashcards and quiz you in a colorful terminal interface. CATV is written in Go for minimal dependencies—all you need is the Ollama App from [ollama.com](https://ollama.com) and the compiled binary from this repository. No cloud, no subscriptions, no hidden costs.
 
