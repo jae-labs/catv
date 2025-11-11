@@ -221,17 +221,16 @@ jobs:
       - name: Checkout Homebrew tap
         uses: actions/checkout@v5
         with:
-          repository: luiz1361/homebrew-catv
+          repository: luiz1361/homebrew-formulae
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: homebrew-catv
+          path: homebrew-formulae
 
       - name: Update formula
         run: |
           VERSION="${{ steps.release_info.outputs.version }}"
           SHA256="${{ steps.release_info.outputs.sha256 }}"
-          
-          cd homebrew-catv/Formula
-          
+          cd homebrew-formulae
+
           # Update the formula
           sed -i "s/version \".*\"/version \"$VERSION\"/" catv.rb
           sed -i "s|url \".*\"|url \"https://github.com/luiz1361/catv/releases/download/$VERSION/catv-darwin-arm64\"|" catv.rb
@@ -242,9 +241,9 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          cd homebrew-catv
+          cd homebrew-formulae
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/catv.rb
+          git add catv.rb
           git commit -m "Update catv to ${{ steps.release_info.outputs.version }}" || exit 0
           git push
