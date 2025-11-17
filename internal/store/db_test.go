@@ -387,7 +387,7 @@ func TestNewStore_ErrorHandling(t *testing.T) {
 	// Test with invalid path (e.g., directory that doesn't exist and can't be created)
 	invalidPath := "/invalid/path/that/does/not/exist/test.db"
 	store, err := NewStore(invalidPath)
-	
+
 	// On some systems, this might succeed if the directory can be created
 	// or fail if it can't. Either way, we should handle it gracefully.
 	if err != nil {
@@ -444,5 +444,3 @@ func TestGetAllFlashcards_EmptyDatabase(t *testing.T) {
 		t.Errorf("Expected 0 flashcards in empty database, got %d", len(cards))
 	}
 }
-
-

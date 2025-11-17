@@ -45,7 +45,7 @@ func TestStatusMessage_Render(t *testing.T) {
 				Success: tt.success,
 			}
 			result := s.Render()
-			
+
 			if tt.contains == "" {
 				if result != "" {
 					t.Errorf("Render() = %q, want empty string", result)

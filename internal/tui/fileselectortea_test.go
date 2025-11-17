@@ -214,7 +214,7 @@ func TestFileSelectorModel_Update_Quit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := NewFileSelectorModel([]string{"/file1.md"})
-			
+
 			var msg tea.Msg
 			if tt.key == tea.KeyRunes {
 				msg = tea.KeyMsg{Type: tt.key, Runes: []rune("q")}

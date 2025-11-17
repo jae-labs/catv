@@ -83,7 +83,7 @@ func TestCreateFrame(t *testing.T) {
 			if rendered == "" {
 				t.Error("CreateFrame() style failed to render content")
 			}
-			
+
 			// Verify it contains the test content
 			if !strings.Contains(rendered, "Test content") {
 				t.Error("CreateFrame() rendered output doesn't contain original content")
@@ -96,7 +96,7 @@ func TestWithMaxHeight(t *testing.T) {
 	opt := WithMaxHeight(10)
 	style := lipgloss.NewStyle()
 	result := opt(style)
-	
+
 	// Verify it renders without error
 	rendered := result.Render("test")
 	if rendered == "" {
@@ -108,7 +108,7 @@ func TestWithAlignment(t *testing.T) {
 	opt := WithAlignment(lipgloss.Center, lipgloss.Center)
 	style := lipgloss.NewStyle()
 	result := opt(style)
-	
+
 	// Verify it renders without error
 	rendered := result.Render("test")
 	if rendered == "" {
@@ -120,7 +120,7 @@ func TestWithPadding(t *testing.T) {
 	opt := WithPadding(2, 3)
 	style := lipgloss.NewStyle()
 	result := opt(style)
-	
+
 	// Verify it renders without error
 	rendered := result.Render("test")
 	if rendered == "" {
@@ -152,12 +152,12 @@ func TestCenterContent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := CenterContent(tt.width, tt.height, tt.content)
-			
+
 			// Result should not be empty
 			if result == "" && tt.content != "" {
 				t.Error("CenterContent() returned empty string for non-empty content")
 			}
-			
+
 			// Should contain the original content
 			if tt.content != "" && !strings.Contains(result, tt.content) {
 				t.Errorf("CenterContent() = %q, want it to contain %q", result, tt.content)
@@ -196,7 +196,7 @@ func TestCalculateTableHeight(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := CalculateTableHeight(tt.terminalHeight)
-			
+
 			if result < tt.minExpected {
 				t.Errorf("CalculateTableHeight(%d) = %d, want >= %d", tt.terminalHeight, result, tt.minExpected)
 			}
@@ -238,7 +238,7 @@ func TestCalculateMaxFrameHeight(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := CalculateMaxFrameHeight(tt.terminalHeight)
-			
+
 			if result < tt.minExpected {
 				t.Errorf("CalculateMaxFrameHeight(%d) = %d, want >= %d", tt.terminalHeight, result, tt.minExpected)
 			}
@@ -272,13 +272,13 @@ func TestCalculateTableColumnWidths(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			idWidth, questionWidth, answerWidth, revisitInWidth := CalculateTableColumnWidths(tt.frameWidth)
-			
+
 			// All widths should be positive
 			if idWidth <= 0 || questionWidth <= 0 || answerWidth <= 0 || revisitInWidth <= 0 {
 				t.Errorf("CalculateTableColumnWidths(%d) returned non-positive width(s): id=%d, q=%d, a=%d, r=%d",
 					tt.frameWidth, idWidth, questionWidth, answerWidth, revisitInWidth)
 			}
-			
+
 			// Question width should be larger than answer width (55/45 split)
 			if questionWidth < answerWidth {
 				t.Errorf("CalculateTableColumnWidths(%d): questionWidth=%d should be >= answerWidth=%d",
@@ -322,12 +322,12 @@ func TestCreateBottomBar(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := CreateBottomBar(tt.width, tt.left, tt.center, tt.right)
-			
+
 			// Should not be empty
 			if result == "" {
 				t.Error("CreateBottomBar() returned empty string")
 			}
-			
+
 			// Should contain non-empty sections
 			if tt.left != "" && !strings.Contains(result, tt.left) {
 				t.Errorf("CreateBottomBar() should contain left section %q", tt.left)
