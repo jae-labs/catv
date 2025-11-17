@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -45,7 +46,7 @@ func GenerateQA(ctx context.Context, model, url, prompt string) (string, error) 
 		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var fullResponse string
+	var response bytes.Buffer
 	dec := json.NewDecoder(resp.Body)
 	for {
 		var chunk map[string]interface{}
@@ -53,30 +54,31 @@ func GenerateQA(ctx context.Context, model, url, prompt string) (string, error) 
 			break
 		}
 		if r, ok := chunk["response"].(string); ok {
-			fullResponse += r
+			response.WriteString(r)
 		}
 		if done, ok := chunk["done"].(bool); ok && done {
 			break
 		}
 	}
-	return fullResponse, nil
+	return response.String(), nil
 }
 
 // ParseFlashcards parses the Ollama response and returns a list of questions and answers
 func ParseFlashcards(response string) ([]map[string]string, error) {
 	var qas []map[string]string
-	lines := splitLines(response)
+	lines := strings.Split(response, "\n")
 	var q, a string
 	for _, line := range lines {
-		l := trimSpace(line)
+		l := strings.TrimSpace(line)
+		l = strings.Trim(l, "*: ")
 		if len(l) < 2 {
 			continue
 		}
 		switch l[:2] {
 		case "Q:":
-			q = trimSpace(l[2:])
+			q = strings.TrimSpace(strings.Trim(l[2:], "*: "))
 		case "A:":
-			a = trimSpace(l[2:])
+			a = strings.TrimSpace(strings.Trim(l[2:], "*: "))
 			if q != "" && a != "" {
 				qas = append(qas, map[string]string{"question": q, "answer": a})
 				q = "" // Reset for next Q/A pair
@@ -84,29 +86,4 @@ func ParseFlashcards(response string) ([]map[string]string, error) {
 		}
 	}
 	return qas, nil
-}
-
-func splitLines(s string) []string {
-	var lines []string
-	start := 0
-	for i, c := range s {
-		if c == '\n' {
-			lines = append(lines, s[start:i])
-			start = i + 1
-		}
-	}
-	if start < len(s) {
-		lines = append(lines, s[start:])
-	}
-	return lines
-}
-
-func trimSpace(s string) string {
-	for len(s) > 0 && (s[0] == '*' || s[0] == ' ' || s[0] == ':') {
-		s = s[1:]
-	}
-	for len(s) > 0 && (s[len(s)-1] == '*' || s[len(s)-1] == ' ' || s[len(s)-1] == ':') {
-		s = s[:len(s)-1]
-	}
-	return s
 }

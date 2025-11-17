@@ -21,6 +21,10 @@ func NewStore(dbName string) (*Store, error) {
 		return nil, err
 	}
 
+	// Configure connection pool for better performance
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
+
 	// Create flashcards table with proper schema
 	createTable := `CREATE TABLE IF NOT EXISTS flashcards (
 			  id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,6 +39,19 @@ func NewStore(dbName string) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Create indexes for frequently queried columns to improve performance
+	indexes := []string{
+		`CREATE INDEX IF NOT EXISTS idx_flashcards_revisitin ON flashcards(revisitin)`,
+		`CREATE INDEX IF NOT EXISTS idx_flashcards_file ON flashcards(file)`,
+		`CREATE INDEX IF NOT EXISTS idx_flashcards_file_revisitin ON flashcards(file, revisitin)`,
+	}
+	for _, idx := range indexes {
+		if _, err := db.Exec(idx); err != nil {
+			return nil, fmt.Errorf("failed to create index: %w", err)
+		}
+	}
+
 	return &Store{DB: db}, nil
 }
 
@@ -53,7 +70,8 @@ func (s *Store) GetFlashcardsForReview() ([]Flashcard, error) {
 		_ = rows.Close()
 	}()
 
-	var flashcards []Flashcard
+	// Pre-allocate slice with reasonable initial capacity to reduce allocations
+	flashcards := make([]Flashcard, 0, 100)
 	for rows.Next() {
 		var fc Flashcard
 		err := rows.Scan(&fc.ID, &fc.File, &fc.Question, &fc.Answer, &fc.RevisitIn)
@@ -106,7 +124,8 @@ func (s *Store) GetFlashcardsForReviewByFiles(files []string) ([]Flashcard, erro
 		_ = rows.Close()
 	}()
 
-	var flashcards []Flashcard
+	// Pre-allocate slice with reasonable initial capacity to reduce allocations
+	flashcards := make([]Flashcard, 0, 50)
 	for rows.Next() {
 		var fc Flashcard
 		err := rows.Scan(&fc.ID, &fc.File, &fc.Question, &fc.Answer, &fc.RevisitIn)
@@ -134,7 +153,8 @@ func (s *Store) GetUniqueFiles() ([]string, error) {
 		_ = rows.Close()
 	}()
 
-	var files []string
+	// Pre-allocate slice with reasonable initial capacity to reduce allocations
+	files := make([]string, 0, 20)
 	for rows.Next() {
 		var file string
 		err := rows.Scan(&file)
@@ -160,7 +180,8 @@ func (s *Store) GetAllFlashcards() ([]Flashcard, error) {
 	defer func() {
 		_ = rows.Close()
 	}()
-	var flashcards []Flashcard
+	// Pre-allocate slice with reasonable initial capacity to reduce allocations
+	flashcards := make([]Flashcard, 0, 100)
 	for rows.Next() {
 		var fc Flashcard
 		if err := rows.Scan(&fc.ID, &fc.File, &fc.Question, &fc.Answer, &fc.RevisitIn); err != nil {

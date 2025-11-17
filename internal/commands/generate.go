@@ -198,12 +198,13 @@ func init() {
 }
 
 func getMarkdownFiles(path string) ([]string, error) {
-	var files []string
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 	if info.IsDir() {
+		// Pre-allocate slice with reasonable initial capacity to reduce allocations
+		files := make([]string, 0, 10)
 		err = filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return err
@@ -213,8 +214,9 @@ func getMarkdownFiles(path string) ([]string, error) {
 			}
 			return nil
 		})
+		return files, err
 	} else if filepath.Ext(path) == ".md" || filepath.Ext(path) == ".markdown" {
-		files = append(files, path)
+		return []string{path}, nil
 	}
-	return files, err
+	return nil, nil
 }
