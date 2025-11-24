@@ -20,7 +20,7 @@ jobs:
         arch: [amd64, arm64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install ARM cross-compiler
         if: matrix.arch == 'arm64'
@@ -64,7 +64,7 @@ jobs:
         arch: [amd64, arm64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -100,7 +100,7 @@ jobs:
       version: ${{ steps.tag.outputs.version }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -227,7 +227,7 @@ jobs:
           echo "Darwin AMD64 SHA256: $SHA256_AMD64"
 
       - name: Checkout Homebrew tap
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: luiz1361/homebrew-formulae
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
