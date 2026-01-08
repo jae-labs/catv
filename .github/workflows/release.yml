@@ -49,7 +49,7 @@ jobs:
           tar -czf catv-linux-${{ matrix.arch }}.tar.gz catv-linux-${{ matrix.arch }}
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: catv-linux-${{ matrix.arch }}
           path: |
@@ -84,7 +84,7 @@ jobs:
           tar -czf catv-darwin-${{ matrix.arch }}.tar.gz catv-darwin-${{ matrix.arch }}
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: catv-darwin-${{ matrix.arch }}
           path: |
