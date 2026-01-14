@@ -122,10 +122,10 @@ jobs:
         run: |
           # Ensure we have all tags
           git fetch --tags --force || true
-          
+
           # Get the latest tag or create initial version
           LATEST_TAG=$(git tag -l "v*.*.*" --sort=-v:refname | head -n 1)
-          
+
           if [ -z "$LATEST_TAG" ]; then
             # No previous tag exists, create v0.0.1
             NEW_VERSION="v0.0.1"
@@ -140,14 +140,14 @@ jobs:
             NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
             echo "Incrementing from $LATEST_TAG to $NEW_VERSION"
           fi
-          
+
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Generate changelog
         id: changelog
         run: |
           LATEST_TAG=$(git tag -l "v*.*.*" --sort=-v:refname | head -n 1)
-          
+
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           if [ -z "$LATEST_TAG" ]; then
             echo "Initial release" >> $GITHUB_OUTPUT
@@ -191,7 +191,7 @@ jobs:
           name: "Latest"
           body: |
             ## Latest
-            
+
             This is an automatically generated release from the latest `main` branch.
           files: dist/*
           prerelease: false
@@ -209,19 +209,19 @@ jobs:
         run: |
           VERSION="${{ needs.release.outputs.version }}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          
+
           # Download the darwin-arm64 binary to calculate SHA256
           curl -L -o catv-darwin-arm64 \
-            "https://github.com/luiz1361/catv/releases/download/${VERSION}/catv-darwin-arm64"
-          
+            "https://github.com/jae-labs/catv/releases/download/${VERSION}/catv-darwin-arm64"
+
           SHA256_ARM64=$(sha256sum catv-darwin-arm64 | awk '{print $1}')
           echo "sha256_arm64=$SHA256_ARM64" >> $GITHUB_OUTPUT
           echo "Darwin ARM64 SHA256: $SHA256_ARM64"
-          
+
           # Download the darwin-amd64 binary to calculate SHA256
           curl -L -o catv-darwin-amd64 \
-            "https://github.com/luiz1361/catv/releases/download/${VERSION}/catv-darwin-amd64"
-          
+            "https://github.com/jae-labs/catv/releases/download/${VERSION}/catv-darwin-amd64"
+
           SHA256_AMD64=$(sha256sum catv-darwin-amd64 | awk '{print $1}')
           echo "sha256_amd64=$SHA256_AMD64" >> $GITHUB_OUTPUT
           echo "Darwin AMD64 SHA256: $SHA256_AMD64"
@@ -229,7 +229,7 @@ jobs:
       - name: Checkout Homebrew tap
         uses: actions/checkout@v6
         with:
-          repository: luiz1361/homebrew-formulae
+          repository: jae-labs/homebrew-formulae
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-formulae
 
@@ -242,13 +242,13 @@ jobs:
 
           # Update the version
           sed -i "s/version \".*\"/version \"$VERSION\"/" catv.rb
-          
+
           # Remove the old sha256 line
           sed -i '/^sha256 /d' catv.rb
-          
+
           # Replace the url line with conditional block for both architectures
-          sed -i "s|^url .*|if Hardware::CPU.arm?\\n  url \"https://github.com/luiz1361/catv/releases/download/$VERSION/catv-darwin-arm64\"\\n  sha256 \"$SHA256_ARM64\"\\nelse\\n  url \"https://github.com/luiz1361/catv/releases/download/$VERSION/catv-darwin-amd64\"\\n  sha256 \"$SHA256_AMD64\"\\nend|" catv.rb
-          
+          sed -i "s|^url .*|if Hardware::CPU.arm?\\n  url \"https://github.com/jae-labs/catv/releases/download/$VERSION/catv-darwin-arm64\"\\n  sha256 \"$SHA256_ARM64\"\\nelse\\n  url \"https://github.com/jae-labs/catv/releases/download/$VERSION/catv-darwin-amd64\"\\n  sha256 \"$SHA256_AMD64\"\\nend|" catv.rb
+
           # Show the changes
           cat catv.rb
 

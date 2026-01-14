@@ -3,17 +3,17 @@
 </p>
 
 <p align="center">
-<a href="https://codecov.io/gh/luiz1361/catv"><img src="https://codecov.io/gh/luiz1361/catv/branch/main/graph/badge.svg" alt="codecov"></a>
-<a href="https://github.com/luiz1361/catv/issues"><img src="https://img.shields.io/github/issues/luiz1361/catv" alt="GitHub issues"></a>
-<a href="https://github.com/luiz1361/catv/stargazers"><img src="https://img.shields.io/github/stars/luiz1361/catv" alt="GitHub stars"></a>
-<a href="https://github.com/luiz1361/catv/network"><img src="https://img.shields.io/github/forks/luiz1361/catv" alt="GitHub forks"></a>
-<a href="https://github.com/luiz1361/catv/releases"><img src="https://img.shields.io/github/downloads/luiz1361/catv/total" alt="Downloads"></a>
-<a href="https://github.com/luiz1361/catv/actions/workflows/ci.yml"><img src="https://github.com/luiz1361/catv/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-<a href="https://github.com/luiz1361/catv/actions/workflows/release.yml"><img src="https://github.com/luiz1361/catv/actions/workflows/release.yml/badge.svg" alt="Release"></a>
-<a href="https://goreportcard.com/report/github.com/luiz1361/catv"><img src="https://goreportcard.com/badge/github.com/luiz1361/catv" alt="Go Report Card"></a>
-<a href="LICENSE"><img src="https://img.shields.io/github/license/luiz1361/catv" alt="License"></a>
-<a href="https://github.com/luiz1361/catv/releases"><img src="https://img.shields.io/github/v/release/luiz1361/catv" alt="GitHub release"></a>
-<a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/luiz1361/catv" alt="Go Version"></a>
+<a href="https://codecov.io/gh/jae-labs/catv"><img src="https://codecov.io/gh/jae-labs/catv/branch/main/graph/badge.svg" alt="codecov"></a>
+<a href="https://github.com/jae-labs/catv/issues"><img src="https://img.shields.io/github/issues/jae-labs/catv" alt="GitHub issues"></a>
+<a href="https://github.com/jae-labs/catv/stargazers"><img src="https://img.shields.io/github/stars/jae-labs/catv" alt="GitHub stars"></a>
+<a href="https://github.com/jae-labs/catv/network"><img src="https://img.shields.io/github/forks/jae-labs/catv" alt="GitHub forks"></a>
+<a href="https://github.com/jae-labs/catv/releases"><img src="https://img.shields.io/github/downloads/jae-labs/catv/total" alt="Downloads"></a>
+<a href="https://github.com/jae-labs/catv/actions/workflows/ci.yml"><img src="https://github.com/jae-labs/catv/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="https://github.com/jae-labs/catv/actions/workflows/release.yml"><img src="https://github.com/jae-labs/catv/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+<a href="https://goreportcard.com/report/github.com/jae-labs/catv"><img src="https://goreportcard.com/badge/github.com/jae-labs/catv" alt="Go Report Card"></a>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/jae-labs/catv" alt="License"></a>
+<a href="https://github.com/jae-labs/catv/releases"><img src="https://img.shields.io/github/v/release/jae-labs/catv" alt="GitHub release"></a>
+<a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/jae-labs/catv" alt="Go Version"></a>
 <a href="https://buymeacoffee.com/luiz1361"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-donate-orange.svg?logo=buymeacoffee" alt="Buy Me A Coffee"></a>
 </p>
 
@@ -46,7 +46,7 @@ Designed for simplicity, privacy, and security. Runs entirely offline and stores
 
   * **Option A: Using Homebrew (Recommended)**  
   ```bash
-  brew tap luiz1361/formulae
+  brew tap jae-labs/formulae
   brew install catv
   ```  
   > [!TIP]  
@@ -54,7 +54,7 @@ Designed for simplicity, privacy, and security. Runs entirely offline and stores
 
   * **Option B: Using the install script**  
   ```bash
-  curl -fsSL https://raw.githubusercontent.com/luiz1361/catv/refs/heads/main/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/jae-labs/catv/refs/heads/main/install.sh | bash
   ```
 
 4. **Generate flashcards from your markdown notes**
@@ -150,4 +150,4 @@ See [LICENSE](LICENSE).
 
 ## Stars
 ## Star History
-[![Star History Chart](https://api.star-history.com/svg?repos=luiz1361/catv&type=date&legend=top-left)](https://www.star-history.com/#luiz1361/catv&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=jae-labs/catv&type=date&legend=top-left)](https://www.star-history.com/#jae-labs/catv&type=date&legend=top-left)
